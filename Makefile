@@ -155,6 +155,28 @@ smoke: build ## End-to-end smoke test (boots the server in Docker and curls it)
 .PHONY: check
 check: validate-json validate-html verify smoke ## Run all checks (JSON, HTML, drift, smoke)
 
+##@ Network
+
+.PHONY: linkcheck
+linkcheck: build ## Verify every outbound link in $(OUTPUT) returns 2xx/3xx (needs network)
+	@echo "[linkcheck] extracting external links from $(OUTPUT)"
+	@$(DOCKER_RUN) node -e "const h=require('fs').readFileSync('$(OUTPUT)','utf8'); \
+		const re=/href=\"(https?:\/\/[^\"]+)\"/g; const seen=new Set(); let m; \
+		while((m=re.exec(h))) seen.add(m[1]); \
+		for (const u of [...seen].sort()) process.stdout.write(u+'\n');" > .linkcheck.urls
+	@count=$$(wc -l < .linkcheck.urls | tr -d ' '); echo "[linkcheck] $$count unique URLs"; \
+	fails=0; while IFS= read -r url; do \
+		code=$$(curl -L -sS -o /dev/null -A 'leewilson.me-linkcheck/1.0' -m 15 -w '%{http_code}' "$$url" || echo "000"); \
+		if [ "$$code" -ge 200 ] 2>/dev/null && [ "$$code" -lt 400 ] 2>/dev/null; then \
+			printf '  OK  %s -> %s\n' "$$code" "$$url"; \
+		else \
+			printf '  x   %s -> %s\n' "$$code" "$$url"; fails=$$((fails+1)); \
+		fi; \
+	done < .linkcheck.urls; \
+	rm -f .linkcheck.urls; \
+	if [ $$fails -gt 0 ]; then echo "[linkcheck] $$fails link(s) failed"; exit 1; fi; \
+	echo "[linkcheck] all links healthy"
+
 ##@ Assets
 
 .PHONY: og-image
