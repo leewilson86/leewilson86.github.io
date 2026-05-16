@@ -49,7 +49,23 @@ const server = http.createServer(async (req, res) => {
     }
 
     const info = await stat(filePath).catch(() => null);
-    if (!info || !info.isFile()) return send(res, 404, 'Not Found');
+    if (!info || !info.isFile()) {
+      // Mirror GitHub Pages behaviour: serve /404.html with status 404 on any
+      // missing path, falling back to plain text if the custom page is absent.
+      const nfPath = join(root, '404.html');
+      const nfInfo = await stat(nfPath).catch(() => null);
+      if (nfInfo && nfInfo.isFile()) {
+        const body = await readFile(nfPath);
+        res.writeHead(404, {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Content-Length': body.length,
+          'Cache-Control': 'no-cache',
+          'X-Content-Type-Options': 'nosniff',
+        });
+        return res.end(body);
+      }
+      return send(res, 404, 'Not Found');
+    }
 
     const body = await readFile(filePath);
     const type = MIME[extname(filePath).toLowerCase()] || 'application/octet-stream';

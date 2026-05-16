@@ -19,8 +19,11 @@ HOST           ?= 127.0.0.1
 OPEN           ?= open
 
 OUTPUT         := index.html
+OUTPUT_404     := 404.html
+OUTPUTS        := $(OUTPUT) $(OUTPUT_404)
 SRC_DIR        := src
 TEMPLATE       := $(SRC_DIR)/templates/index.template.html
+TEMPLATE_404   := $(SRC_DIR)/templates/404.template.html
 DATA           := $(SRC_DIR)/data/profile.json
 ICONS          := $(SRC_DIR)/scripts/icons.mjs
 BUILD_SCRIPT   := $(SRC_DIR)/scripts/build.mjs
@@ -28,7 +31,7 @@ SERVE_SCRIPT   := $(SRC_DIR)/scripts/serve.mjs
 SMOKE_SCRIPT   := $(SRC_DIR)/scripts/smoke.sh
 STYLES         := styles.css
 
-SOURCES        := $(DATA) $(TEMPLATE) $(ICONS) $(BUILD_SCRIPT)
+SOURCES        := $(DATA) $(TEMPLATE) $(TEMPLATE_404) $(ICONS) $(BUILD_SCRIPT)
 
 # Run a one-shot node command in the pinned image with the project mounted.
 # Uses the host UID/GID so generated files are not owned by root.
@@ -62,9 +65,9 @@ help: ## Show this help
 ##@ Build
 
 .PHONY: build
-build: $(OUTPUT) ## Render index.html from data + template (inside Docker)
+build: $(OUTPUTS) ## Render index.html + 404.html from data + templates (inside Docker)
 
-$(OUTPUT): $(SOURCES)
+$(OUTPUTS): $(SOURCES)
 	@$(DOCKER_RUN) node $(BUILD_SCRIPT)
 
 .PHONY: rebuild
@@ -108,18 +111,23 @@ shell: ## Open an interactive shell inside the pinned Node image
 ##@ Quality
 
 .PHONY: verify
-verify: ## Fail if committed index.html differs from a fresh build (drift check)
-	@cp $(OUTPUT) .index.html.committed
+verify: ## Fail if any committed generated file drifts from a fresh build
+	@for f in $(OUTPUTS); do cp "$$f" ".$$f.committed"; done
 	@$(DOCKER_RUN) node $(BUILD_SCRIPT) >/dev/null
-	@if ! diff -q .index.html.committed $(OUTPUT) >/dev/null; then \
-		echo "x index.html is out of date with its inputs."; \
-		echo "  Run 'make build' and commit the result."; \
-		diff -u .index.html.committed $(OUTPUT) | sed -n '1,40p'; \
-		mv .index.html.committed $(OUTPUT); \
-		exit 1; \
+	@status=0; for f in $(OUTPUTS); do \
+		if ! diff -q ".$$f.committed" "$$f" >/dev/null; then \
+			echo "x $$f is out of date with its inputs."; \
+			diff -u ".$$f.committed" "$$f" | sed -n '1,40p'; \
+			mv ".$$f.committed" "$$f"; \
+			status=1; \
+		else \
+			rm -f ".$$f.committed"; \
+		fi; \
+	done; \
+	if [ $$status -eq 0 ]; then \
+		echo "OK - generated files in sync with inputs."; \
 	else \
-		rm -f .index.html.committed; \
-		echo "OK - index.html is in sync with inputs."; \
+		echo "  Run 'make build' and commit the result."; exit 1; \
 	fi
 
 .PHONY: validate-json
@@ -127,12 +135,14 @@ validate-json: ## Validate src/data/profile.json is well-formed JSON
 	@$(DOCKER_RUN) node -e "JSON.parse(require('fs').readFileSync('$(DATA)','utf8')); console.log('OK - $(DATA) is valid JSON')"
 
 .PHONY: validate-html
-validate-html: build ## Quick sanity-check that index.html looks well-formed
-	@$(DOCKER_RUN) node -e "const h=require('fs').readFileSync('$(OUTPUT)','utf8'); \
-		if(!/^<!doctype html>/i.test(h)) { console.error('x missing doctype'); process.exit(1); } \
-		const opens=(h.match(/<section/g)||[]).length, closes=(h.match(/<\/section>/g)||[]).length; \
-		if(opens!==closes){console.error('x <section> tags unbalanced ('+opens+' vs '+closes+')');process.exit(1);} \
-		console.log('OK - $(OUTPUT) looks well-formed ('+opens+' sections)');"
+validate-html: build ## Quick sanity-check that generated HTML files look well-formed
+	@for f in $(OUTPUTS); do \
+		$(DOCKER_RUN) node -e "const h=require('fs').readFileSync('$$f','utf8'); \
+			if(!/^<!doctype html>/i.test(h)) { console.error('x missing doctype in $$f'); process.exit(1); } \
+			const opens=(h.match(/<section/g)||[]).length, closes=(h.match(/<\/section>/g)||[]).length; \
+			if(opens!==closes){console.error('x <section> tags unbalanced in $$f ('+opens+' vs '+closes+')');process.exit(1);} \
+			console.log('OK - $$f looks well-formed ('+opens+' sections)');"; \
+	done
 
 .PHONY: smoke
 smoke: build ## End-to-end smoke test (boots the server in Docker and curls it)
@@ -145,7 +155,7 @@ check: validate-json validate-html verify smoke ## Run all checks (JSON, HTML, d
 
 .PHONY: clean
 clean: ## Remove generated artefacts
-	@rm -f $(OUTPUT) .index.html.committed
+	@rm -f $(OUTPUTS) .index.html.committed .404.html.committed
 	@echo "OK - cleaned"
 
 .PHONY: doctor
@@ -161,14 +171,14 @@ doctor: ## Print tool versions and environment info
 ##@ Release
 
 .PHONY: release
-release: check ## Verify, build, and commit any regenerated index.html
+release: check ## Verify, build, and commit any regenerated outputs
 	@$(MAKE) --no-print-directory build
-	@if git diff --quiet -- $(OUTPUT); then \
-		echo "OK - nothing to commit ($(OUTPUT) already up to date)"; \
+	@if git diff --quiet -- $(OUTPUTS); then \
+		echo "OK - nothing to commit (generated files already up to date)"; \
 	else \
-		git add $(OUTPUT) $(SOURCES) $(STYLES); \
-		git commit -m "build: regenerate $(OUTPUT)"; \
-		echo "OK - committed regenerated $(OUTPUT)"; \
+		git add $(OUTPUTS) $(SOURCES) $(STYLES); \
+		git commit -m "build: regenerate $(OUTPUT) + $(OUTPUT_404)"; \
+		echo "OK - committed regenerated outputs"; \
 	fi
 
 

@@ -51,19 +51,32 @@ const renderSection = (section) => `
 
 const build = async () => {
   const data = JSON.parse(await readFile(join(srcDir, 'data/profile.json'), 'utf8'));
-  const tmpl = await readFile(join(srcDir, 'templates/index.template.html'), 'utf8');
+  const indexTmpl = await readFile(join(srcDir, 'templates/index.template.html'), 'utf8');
+  const nfTmpl    = await readFile(join(srcDir, 'templates/404.template.html'), 'utf8');
 
-  const html = tmpl
+  const indexHtml = indexTmpl
     .replaceAll('{{NAME}}', escapeHtml(data.name))
     .replaceAll('{{TAGLINE}}', escapeHtml(data.tagline))
     .replaceAll('{{INTRO}}', escapeHtml(data.intro))
     .replaceAll('{{FOOTER}}', escapeHtml(data.footer))
     .replace('{{SECTIONS}}', data.sections.filter((s) => !s.hidden).map(renderSection).join('\n'));
 
-  await writeFile(join(root, 'index.html'), html, 'utf8');
+  const nf = data.notFound || {};
+  const nfHtml = nfTmpl
+    .replaceAll('{{NAME}}', escapeHtml(data.name))
+    .replaceAll('{{FOOTER}}', escapeHtml(data.footer))
+    .replaceAll('{{NF_CODE}}',    escapeHtml(nf.code    || '404'))
+    .replaceAll('{{NF_TITLE}}',   escapeHtml(nf.title   || 'Page not found'))
+    .replaceAll('{{NF_MESSAGE}}', escapeHtml(nf.message || "That URL doesn't lead anywhere on this site."))
+    .replaceAll('{{NF_CTA}}',     escapeHtml(nf.cta     || 'Back to the homepage'));
+
+  await writeFile(join(root, 'index.html'), indexHtml, 'utf8');
+  await writeFile(join(root, '404.html'),   nfHtml,    'utf8');
+
   const visible = data.sections.filter((s) => !s.hidden);
-  const hidden = data.sections.length - visible.length;
+  const hidden  = data.sections.length - visible.length;
   console.log(`[build] wrote index.html (${visible.length} sections${hidden ? `, ${hidden} hidden` : ''}, ${visible.reduce((n, s) => n + s.links.length, 0)} links)`);
+  console.log(`[build] wrote 404.html  (custom GitHub Pages error page)`);
 };
 
 build().catch((err) => {

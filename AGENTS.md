@@ -15,14 +15,15 @@ The site is rendered at build time from a small data file so the most common cha
 
 | Concern | File |
 |---|---|
-| Page content (name, tagline, sections, links, handles, footer) | `src/data/profile.json` |
-| HTML shell + meta tags | `src/templates/index.template.html` |
+| Page content (name, tagline, sections, links, handles, footer, 404 copy) | `src/data/profile.json` |
+| HTML shell + meta tags (home) | `src/templates/index.template.html` |
+| HTML shell for the custom 404 page | `src/templates/404.template.html` |
 | Brand icon SVG paths (24×24 viewBox) | `src/scripts/icons.mjs` |
 | Visual design | `styles.css` |
 | Build orchestration | `src/scripts/build.mjs` |
 | Local static server | `src/scripts/serve.mjs` (zero-dep, Node built-ins) |
 | Automated smoke test | `src/scripts/smoke.sh` (boots server in Docker, asserts HTTP + content) |
-| Generated output (committed, served by Pages) | `index.html` |
+| Generated outputs (committed, served by Pages) | `index.html`, `404.html` |
 | Custom domain | `CNAME` |
 | GitHub Pages / Jekyll config (exclusions) | `_config.yml` |
 | Task automation | `Makefile` |
@@ -47,7 +48,7 @@ in `_config.yml`** (or, preferably, place it under `src/`, which is
 already excluded as a directory). Dotfiles are excluded by Jekyll's
 defaults and do not need an entry.
 
-**Never hand-edit `index.html`.** It is generated. Edit the inputs, then run `npm run build`.
+**Never hand-edit `index.html` or `404.html`.** They are generated. Edit the inputs, then run `make build` (or `npm run build`).
 
 ## Build / run
 
@@ -191,7 +192,10 @@ The agent is expected to be competent in:
   `CNAME`, caching considerations), and the Jekyll defaults Pages applies -
   notably that everything at the repo root is published unless excluded via
   `_config.yml` (`exclude:`) or already hidden by Jekyll defaults (dotfiles,
-  `node_modules`, etc.).
+  `node_modules`, etc.). Knows that Pages serves `/404.html` at the repo root
+  on any not-found URL, that other status codes (403, 5xx) are not
+  customisable, and that the 404 page must use absolute asset paths
+  (e.g. `/styles.css`) because it is served for arbitrary URL depths.
 - **Static-site discipline:** treating generated files as artefacts, keeping the
   source of truth in data + templates, and producing deterministic output.
 - **Reviewing manual edits** to `index.html` / `styles.css` / `CNAME` and back-porting

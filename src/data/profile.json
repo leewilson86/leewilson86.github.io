@@ -3,6 +3,12 @@
   "tagline": "Technologist. Musician. Curious human.",
   "intro": "I build software and infrastructure, play in a band, and stay curious - here's where to find me online.",
   "footer": "© Lee Wilson · leewilson.me",
+  "notFound": {
+    "code": "404",
+    "title": "Page not found",
+    "message": "That URL doesn't lead anywhere on this site. The link may be wrong, or the page may have moved.",
+    "cta": "Back to the homepage"
+  },
   "sections": [
     {
       "id": "professional",

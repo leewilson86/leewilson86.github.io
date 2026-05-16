@@ -76,9 +76,17 @@ assert_missing 'id="personal"'
 assert_url "/styles.css" 1000
 
 # --- 404 path --------------------------------------------------------------
-not_found=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:${SMOKE_PORT}/does-not-exist")
-[ "$not_found" = "404" ] || fail "GET /does-not-exist -> HTTP ${not_found} (expected 404)"
-log "OK  GET /does-not-exist -> HTTP 404"
+# Should serve the custom 404.html with status 404 (matches GitHub Pages).
+code=$(curl -s -o "$TMP_BODY" -w '%{http_code}' "http://127.0.0.1:${SMOKE_PORT}/does-not-exist")
+[ "$code" = "404" ] || fail "GET /does-not-exist -> HTTP ${code} (expected 404)"
+grep -q "Page not found" "$TMP_BODY" || fail "404 response missing 'Page not found' content"
+grep -q "Lee Wilson"     "$TMP_BODY" || fail "404 response missing site branding"
+log "OK  GET /does-not-exist -> HTTP 404 (custom page served)"
+
+# Direct fetch of /404.html itself should also work (status 200 here, but
+# the file is what GitHub Pages will serve as a 404 body).
+assert_url "/404.html" 1000
+assert_contains "Page not found"
 
 log "all smoke assertions passed"
 
