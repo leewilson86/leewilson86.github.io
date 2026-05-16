@@ -1,9 +1,9 @@
-# robots.txt for https://leewilson.me
+# robots.txt for https://www.leewilson.me
 # Single static landing page - allow everything, advertise the sitemap.
 
 User-agent: *
 Allow: /
 
-Sitemap: https://leewilson.me/sitemap.xml
+Sitemap: https://www.leewilson.me/sitemap.xml
 
 

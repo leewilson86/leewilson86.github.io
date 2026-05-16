@@ -80,9 +80,9 @@ assert_url "/styles.css" 1000
 
 # --- robots.txt + sitemap.xml ---------------------------------------------
 assert_url "/robots.txt" 30
-assert_contains "Sitemap: https://leewilson.me/sitemap.xml"
+assert_contains "Sitemap: https://www.leewilson.me/sitemap.xml"
 assert_url "/sitemap.xml" 100
-assert_contains "<loc>https://leewilson.me/</loc>"
+assert_contains "<loc>https://www.leewilson.me/</loc>"
 
 # --- og-image.png ----------------------------------------------------------
 # Sharing previews depend on this 1200x630 PNG existing at /og-image.png.

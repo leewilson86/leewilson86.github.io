@@ -185,9 +185,9 @@ og-image: $(OG_PNG) ## Re-render $(OG_PNG) from $(OG_SVG) via one-off Alpine + r
 $(OG_PNG): $(OG_SVG)
 	@echo "[og-image] rendering $(OG_SVG) -> $(OG_PNG) (1200x630)"
 	@$(DOCKER) run --rm -v "$(CURDIR)":/work -w /work alpine:3.20 sh -c \
-		"apk add --no-cache rsvg-convert >/dev/null && \
+		'apk add --no-cache rsvg-convert >/dev/null && \
 		 rsvg-convert -w 1200 -h 630 -o $(OG_PNG) $(OG_SVG) && \
-		 chown $$$$(id -u):$$$$(id -g) $(OG_PNG)"
+		 chown '"$$(id -u):$$(id -g)"' $(OG_PNG)'
 	@ls -lh $(OG_PNG) | awk '{ print "[og-image] wrote " $$NF " (" $$5 ")" }'
 
 ##@ Housekeeping

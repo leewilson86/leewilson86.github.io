@@ -13,10 +13,10 @@ import { icons } from './icons.mjs';
 const here = dirname(fileURLToPath(import.meta.url));
 const srcDir = join(here, '..');
 const root = join(srcDir, '..');
-// Canonical site URL. Single source of truth for the host - injected into
-// templates as {{SITE_URL}} so og:url, canonical, etc. all stay in sync.
+// Canonical site URL - the www host is the forced default; the apex
+// (leewilson.me) is expected to 301-redirect to it at the edge.
 // Trailing slash is significant (used as a base in templates).
-const SITE_URL = 'https://leewilson.me/';
+const SITE_URL = 'https://www.leewilson.me/';
 
 const escapeHtml = (s) =>
   String(s).replace(/[&<>"']/g, (c) => ({

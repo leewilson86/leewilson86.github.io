@@ -2,7 +2,7 @@
   "name": "leewilson-me",
   "private": true,
   "version": "1.0.0",
-  "description": "Static personal hub for leewilson.me (hosted at leewilson86.github.io).",
+  "description": "Static personal hub for www.leewilson.me (hosted at leewilson86.github.io).",
   "type": "module",
   "scripts": {
     "build": "node src/scripts/build.mjs",
