@@ -15,6 +15,7 @@ Plain, modern web: HTML5, CSS3 (custom properties, CSS grid, `dvh` units), no ru
 ├── index.html                    # ← generated; committed for GitHub Pages
 ├── styles.css                    # hand-written, dark theme (black / white / soft blues / grays)
 ├── CNAME                         # custom domain for GitHub Pages
+├── _config.yml                   # Jekyll/Pages config: excludes source/tooling files from publication
 ├── src/                          # ← all build sources live here, away from served files
 │   ├── data/
 │   │   └── profile.json          # ← edit me: name, tagline, sections, links
@@ -134,6 +135,32 @@ a group of links offline without losing them.
 ## Hosting
 
 GitHub Pages serves the repo root as a static site. Cloudflare proxies `leewilson.me` → `leewilson86.github.io`. The `CNAME` file pins the custom domain on the GitHub Pages side.
+
+### Keeping source files off the public site
+
+GitHub Pages runs Jekyll over the repository by default. Without configuration,
+every file at the repo root would be reachable at `https://leewilson.me/<path>`
+(for example `/package.json` or `/Makefile`). The `_config.yml` at the repo
+root tells Jekyll to drop the build sources and tooling files from the
+published site:
+
+```yaml
+exclude:
+  - AGENTS.md
+  - README.md
+  - Dockerfile
+  - Makefile
+  - package.json
+  - src/
+```
+
+Dotfiles (`.gitignore`, `.dockerignore`, `.nvmrc`, `.idea/` etc.) are excluded
+by Jekyll's own defaults and do not need an entry. Only `index.html`,
+`styles.css`, and `CNAME` (consumed by Pages itself) are published.
+
+When adding a new top-level file that is **not** meant to be served publicly,
+add it to `_config.yml`'s `exclude:` list - or, better, put it under `src/`,
+which is already excluded as a directory.
 
 ## License
 

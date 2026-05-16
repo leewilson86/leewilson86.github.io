@@ -24,6 +24,7 @@ The site is rendered at build time from a small data file so the most common cha
 | Automated smoke test | `src/scripts/smoke.sh` (boots server in Docker, asserts HTTP + content) |
 | Generated output (committed, served by Pages) | `index.html` |
 | Custom domain | `CNAME` |
+| GitHub Pages / Jekyll config (exclusions) | `_config.yml` |
 | Task automation | `Makefile` |
 | Pinned dev/build runtime | `Dockerfile` (`node:24-alpine`), `.dockerignore` |
 | Node version pin (host fallback) | `.nvmrc`, `engines` in `package.json` |
@@ -37,6 +38,14 @@ Everything that drives the build - data, templates, scripts - lives under
 `src/`. When adding new build-time assets, put them under `src/`; only add a
 file at the repo root if GitHub Pages needs to serve it (or tooling
 conventionally requires it to be at the root).
+
+GitHub Pages runs Jekyll over the repo by default. Anything at the root
+that is not listed in `_config.yml`'s `exclude:` block will be reachable
+at `https://leewilson.me/<path>`. **When adding a new top-level file
+that is not meant to be served publicly, add it to the `exclude:` list
+in `_config.yml`** (or, preferably, place it under `src/`, which is
+already excluded as a directory). Dotfiles are excluded by Jekyll's
+defaults and do not need an entry.
 
 **Never hand-edit `index.html`.** It is generated. Edit the inputs, then run `npm run build`.
 
@@ -179,7 +188,10 @@ The agent is expected to be competent in:
   `node:path`, `node:url`). No bundlers required.
 - **SVG**, including hand-authoring 24×24 brand icons and inlining path data.
 - **GitHub Pages + custom domains + Cloudflare** (apex/`www` handling, the role of
-  `CNAME`, caching considerations).
+  `CNAME`, caching considerations), and the Jekyll defaults Pages applies -
+  notably that everything at the repo root is published unless excluded via
+  `_config.yml` (`exclude:`) or already hidden by Jekyll defaults (dotfiles,
+  `node_modules`, etc.).
 - **Static-site discipline:** treating generated files as artefacts, keeping the
   source of truth in data + templates, and producing deterministic output.
 - **Reviewing manual edits** to `index.html` / `styles.css` / `CNAME` and back-porting
