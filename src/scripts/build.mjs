@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Static site builder for leewilson.me
-// Reads data/profile.json + templates/index.template.html and writes index.html.
+// Reads src/data/profile.json + src/templates/index.template.html and writes index.html.
 // Run: `npm run build`
 
 import { readFile, writeFile } from 'node:fs/promises';
@@ -8,7 +8,10 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { icons } from './icons.mjs';
 
-const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+// This script lives at src/scripts/build.mjs; the repo root is two levels up.
+const here = dirname(fileURLToPath(import.meta.url));
+const srcDir = join(here, '..');
+const root = join(srcDir, '..');
 
 const escapeHtml = (s) =>
   String(s).replace(/[&<>"']/g, (c) => ({
@@ -47,8 +50,8 @@ const renderSection = (section) => `
     </section>`;
 
 const build = async () => {
-  const data = JSON.parse(await readFile(join(root, 'data/profile.json'), 'utf8'));
-  const tmpl = await readFile(join(root, 'templates/index.template.html'), 'utf8');
+  const data = JSON.parse(await readFile(join(srcDir, 'data/profile.json'), 'utf8'));
+  const tmpl = await readFile(join(srcDir, 'templates/index.template.html'), 'utf8');
 
   const html = tmpl
     .replaceAll('{{NAME}}', escapeHtml(data.name))

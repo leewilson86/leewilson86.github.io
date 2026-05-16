@@ -12,27 +12,31 @@ Plain, modern web: HTML5, CSS3 (custom properties, CSS grid, `dvh` units), no ru
 
 ```
 .
-├── index.html                 # ← generated; committed for GitHub Pages
-├── styles.css                 # hand-written, dark theme (black / white / soft blues / grays)
-├── CNAME                      # custom domain for GitHub Pages
-├── data/
-│   └── profile.json           # ← edit me: name, tagline, sections, links
-├── templates/
-│   └── index.template.html    # HTML shell with {{PLACEHOLDERS}}
-├── scripts/
-│   ├── build.mjs              # renders template + data → index.html
-│   ├── serve.mjs              # zero-dep static server used by `make serve`
-│   ├── smoke.sh               # end-to-end smoke test (`make smoke`)
-│   └── icons.mjs              # brand SVG path data (Simple Icons, CC0)
-├── package.json               # `npm run build` / `npm run serve`
-├── Makefile                   # convenience automation (build, serve, check, release…)
-├── Dockerfile                 # pinned Node 24 LTS Alpine image
-├── .dockerignore              # files excluded from the Docker build context
-├── .nvmrc                     # Node version pin for host devs (`24`)
-├── .gitignore                 # OS / IDE (JetBrains, VS Code) / build noise
-├── AGENTS.md                  # contract for AI agents working in this repo
-└── README.md                  # you are here
+├── index.html                    # ← generated; committed for GitHub Pages
+├── styles.css                    # hand-written, dark theme (black / white / soft blues / grays)
+├── CNAME                         # custom domain for GitHub Pages
+├── src/                          # ← all build sources live here, away from served files
+│   ├── data/
+│   │   └── profile.json          # ← edit me: name, tagline, sections, links
+│   ├── templates/
+│   │   └── index.template.html   # HTML shell with {{PLACEHOLDERS}}
+│   └── scripts/
+│       ├── build.mjs             # renders template + data → index.html
+│       ├── serve.mjs             # zero-dep static server used by `make serve`
+│       ├── smoke.sh              # end-to-end smoke test (`make smoke`)
+│       └── icons.mjs             # brand SVG path data (Simple Icons, CC0)
+├── package.json                  # `npm run build` / `npm run serve`
+├── Makefile                      # convenience automation (build, serve, check, release…)
+├── Dockerfile                    # pinned Node 24 LTS Alpine image
+├── .dockerignore                 # files excluded from the Docker build context
+├── .nvmrc                        # Node version pin for host devs (`24`)
+├── .gitignore                    # OS / IDE (JetBrains, VS Code) / build noise
+├── AGENTS.md                     # contract for AI agents working in this repo
+└── README.md                     # you are here
 ```
+
+Only the three artefacts at the repo root (`index.html`, `styles.css`, `CNAME`)
+are served by GitHub Pages. Everything under `src/` is build-time source.
 
 ## Develop
 
@@ -57,11 +61,11 @@ If you prefer to run on the host directly, install Node.js **24 LTS** (see
 `.nvmrc` / `engines` in `package.json`) and use the npm scripts:
 
 ```bash
-npm run build      # node scripts/build.mjs   -> writes index.html
-npm run serve      # node scripts/serve.mjs   -> http://localhost:8080
+npm run build      # node src/scripts/build.mjs   -> writes index.html
+npm run serve      # node src/scripts/serve.mjs   -> http://localhost:8080
 ```
 
-`scripts/serve.mjs` is a tiny zero-dependency static server using Node built-ins
+`src/scripts/serve.mjs` is a tiny zero-dependency static server using Node built-ins
 only; there is nothing to install with `npm install`.
 
 ### Node version pin
@@ -84,7 +88,7 @@ inside the pinned container. Run `make` to see the full list:
 
 | Target | What it does |
 |---|---|
-| `make build` | Render `index.html` from `data/` + `templates/` + `scripts/` (in Docker) |
+| `make build` | Render `index.html` from `src/data/` + `src/templates/` + `src/scripts/` (in Docker) |
 | `make rebuild` | `clean` then `build` |
 | `make watch` | Rebuild on file changes (requires `fswatch` on host: `brew install fswatch`) |
 | `make serve` | Serve the site from a container on `http://127.0.0.1:8080` |
@@ -92,7 +96,7 @@ inside the pinned container. Run `make` to see the full list:
 | `make pull` | Pull / refresh the pinned `node:24-alpine` image |
 | `make shell` | Open an interactive shell inside the pinned image |
 | `make verify` | Fail if committed `index.html` drifts from a fresh build |
-| `make validate-json` | Check `data/profile.json` is well-formed |
+| `make validate-json` | Check `src/data/profile.json` is well-formed |
 | `make validate-html` | Quick structural sanity-check of `index.html` |
 | `make smoke` | Boot the server in Docker, fetch `/` and `/styles.css`, assert HTTP 200 and key content |
 | `make check` | All of the above validation checks |
@@ -105,14 +109,14 @@ or `make build NODE_IMAGE=node:24-alpine@sha256:<digest>`.
 
 ### Adding or changing a link
 
-1. Edit `data/profile.json`.
-2. If you need a new brand icon, add its 24×24 SVG path to `scripts/icons.mjs` and reference it by key in the JSON.
-3. Run `npm run build`.
+1. Edit `src/data/profile.json`.
+2. If you need a new brand icon, add its 24×24 SVG path to `src/scripts/icons.mjs` and reference it by key in the JSON.
+3. Run `make build` (or `npm run build`).
 4. Commit both the data change **and** the regenerated `index.html`.
 
 ### Sections
 
-Driven by `data/profile.json`. A section with `"hidden": true` is kept in the data
+Driven by `src/data/profile.json`. A section with `"hidden": true` is kept in the data
 file but skipped at render time - handy for staging changes or temporarily taking
 a group of links offline without losing them.
 

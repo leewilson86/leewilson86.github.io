@@ -6,13 +6,16 @@
 # fast (a few seconds) and safe to run after every edit.
 #
 # Environment overrides:
-#   NODE_IMAGE  - container image to use (default: node:24-alpine)
-#   SMOKE_PORT  - host port to publish (default: 18080)
+#   NODE_IMAGE    - container image to use (default: node:24-alpine)
+#   SMOKE_PORT    - host port to publish (default: 18080)
+#   SERVE_SCRIPT  - path (relative to repo root) of the serve script
+#                   (default: src/scripts/serve.mjs)
 
 set -euo pipefail
 
 NODE_IMAGE="${NODE_IMAGE:-node:24-alpine}"
 SMOKE_PORT="${SMOKE_PORT:-18080}"
+SERVE_SCRIPT="${SERVE_SCRIPT:-src/scripts/serve.mjs}"
 NAME="lw-smoke-$$"
 TMP_BODY="$(mktemp -t lw-smoke.XXXXXX)"
 
@@ -31,7 +34,7 @@ docker run -d --rm --name "$NAME" \
   -v "$PWD":/app -w /app \
   -p "127.0.0.1:${SMOKE_PORT}:8080" \
   -e HOST=0.0.0.0 -e PORT=8080 \
-  "$NODE_IMAGE" node scripts/serve.mjs >/dev/null
+  "$NODE_IMAGE" node "$SERVE_SCRIPT" >/dev/null
 
 # Wait up to ~5s for the server to start responding.
 ready=0

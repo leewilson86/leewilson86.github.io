@@ -19,11 +19,13 @@ HOST           ?= 127.0.0.1
 OPEN           ?= open
 
 OUTPUT         := index.html
-TEMPLATE       := templates/index.template.html
-DATA           := data/profile.json
-ICONS          := scripts/icons.mjs
-BUILD_SCRIPT   := scripts/build.mjs
-SERVE_SCRIPT   := scripts/serve.mjs
+SRC_DIR        := src
+TEMPLATE       := $(SRC_DIR)/templates/index.template.html
+DATA           := $(SRC_DIR)/data/profile.json
+ICONS          := $(SRC_DIR)/scripts/icons.mjs
+BUILD_SCRIPT   := $(SRC_DIR)/scripts/build.mjs
+SERVE_SCRIPT   := $(SRC_DIR)/scripts/serve.mjs
+SMOKE_SCRIPT   := $(SRC_DIR)/scripts/smoke.sh
 STYLES         := styles.css
 
 SOURCES        := $(DATA) $(TEMPLATE) $(ICONS) $(BUILD_SCRIPT)
@@ -121,7 +123,7 @@ verify: ## Fail if committed index.html differs from a fresh build (drift check)
 	fi
 
 .PHONY: validate-json
-validate-json: ## Validate data/profile.json is well-formed JSON
+validate-json: ## Validate src/data/profile.json is well-formed JSON
 	@$(DOCKER_RUN) node -e "JSON.parse(require('fs').readFileSync('$(DATA)','utf8')); console.log('OK - $(DATA) is valid JSON')"
 
 .PHONY: validate-html
@@ -134,7 +136,7 @@ validate-html: build ## Quick sanity-check that index.html looks well-formed
 
 .PHONY: smoke
 smoke: build ## End-to-end smoke test (boots the server in Docker and curls it)
-	@NODE_IMAGE="$(NODE_IMAGE)" bash scripts/smoke.sh
+	@NODE_IMAGE="$(NODE_IMAGE)" SERVE_SCRIPT="$(SERVE_SCRIPT)" bash $(SMOKE_SCRIPT)
 
 .PHONY: check
 check: validate-json validate-html verify smoke ## Run all checks (JSON, HTML, drift, smoke)

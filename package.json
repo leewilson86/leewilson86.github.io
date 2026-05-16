@@ -5,8 +5,8 @@
   "description": "Static personal hub for leewilson.me (hosted at leewilson86.github.io).",
   "type": "module",
   "scripts": {
-    "build": "node scripts/build.mjs",
-    "serve": "node scripts/serve.mjs"
+    "build": "node src/scripts/build.mjs",
+    "serve": "node src/scripts/serve.mjs"
   },
   "engines": {
     "node": ">=24 <25"

@@ -20,6 +20,6 @@ EXPOSE 8080
 
 # Default command: serve the (already-built) site.
 # Override in `docker run` for one-shot builds, e.g.:
-#   docker run --rm -v "$PWD":/app -w /app leewilson-me node scripts/build.mjs
-CMD ["node", "scripts/serve.mjs"]
+#   docker run --rm -v "$PWD":/app -w /app leewilson-me node src/scripts/build.mjs
+CMD ["node", "src/scripts/serve.mjs"]
 

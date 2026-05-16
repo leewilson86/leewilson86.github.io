@@ -15,18 +15,28 @@ The site is rendered at build time from a small data file so the most common cha
 
 | Concern | File |
 |---|---|
-| Page content (name, tagline, sections, links, handles, footer) | `data/profile.json` |
-| HTML shell + meta tags | `templates/index.template.html` |
-| Brand icon SVG paths (24×24 viewBox) | `scripts/icons.mjs` |
+| Page content (name, tagline, sections, links, handles, footer) | `src/data/profile.json` |
+| HTML shell + meta tags | `src/templates/index.template.html` |
+| Brand icon SVG paths (24×24 viewBox) | `src/scripts/icons.mjs` |
 | Visual design | `styles.css` |
-| Build orchestration | `scripts/build.mjs` |
-| Local static server | `scripts/serve.mjs` (zero-dep, Node built-ins) |
-| Automated smoke test | `scripts/smoke.sh` (boots server in Docker, asserts HTTP + content) |
+| Build orchestration | `src/scripts/build.mjs` |
+| Local static server | `src/scripts/serve.mjs` (zero-dep, Node built-ins) |
+| Automated smoke test | `src/scripts/smoke.sh` (boots server in Docker, asserts HTTP + content) |
 | Generated output (committed, served by Pages) | `index.html` |
 | Custom domain | `CNAME` |
 | Task automation | `Makefile` |
 | Pinned dev/build runtime | `Dockerfile` (`node:24-alpine`), `.dockerignore` |
 | Node version pin (host fallback) | `.nvmrc`, `engines` in `package.json` |
+
+### Layout convention
+
+The repo root holds **only** files that GitHub Pages serves directly
+(`index.html`, `styles.css`, `CNAME`) plus conventional top-level project files
+(`README.md`, `AGENTS.md`, `Makefile`, `Dockerfile`, `package.json`, dotfiles).
+Everything that drives the build - data, templates, scripts - lives under
+`src/`. When adding new build-time assets, put them under `src/`; only add a
+file at the repo root if GitHub Pages needs to serve it (or tooling
+conventionally requires it to be at the root).
 
 **Never hand-edit `index.html`.** It is generated. Edit the inputs, then run `npm run build`.
 
@@ -76,9 +86,9 @@ it that way unless there's a strong reason.
 ## Required workflow for every change
 
 1. Detect any manual edits the user has made since the last agent run:
-   - Diff `index.html` against what `scripts/build.mjs` would currently produce
+   - Diff `index.html` against what `src/scripts/build.mjs` would currently produce
      (use `make verify`). If they differ in ways not explained by
-     `data/profile.json` / `templates/` / `scripts/icons.mjs`, the user has
+     `src/data/profile.json` / `src/templates/` / `src/scripts/icons.mjs`, the user has
      hand-edited the output. Port those changes back into the **inputs** (data,
      template, icons, or styles) before doing anything else, then rebuild.
    - Check for new files (e.g. images, additional pages, workflows) and reflect
@@ -90,7 +100,7 @@ it that way unless there's a strong reason.
 3. Make the requested change in the appropriate **input** file.
 4. **Run `make check` after every edit.** This rebuilds `index.html` in the
    pinned Node container, validates JSON + HTML structure, performs the drift
-   check, and runs the automated end-to-end smoke test (`scripts/smoke.sh`),
+   check, and runs the automated end-to-end smoke test (`src/scripts/smoke.sh`),
    which boots the static server in Docker and asserts HTTP 200 + key content.
    Do not yield control back to the user until `make check` passes.
 5. Before yielding, grep once more for em/en dashes in any files touched (and
@@ -119,8 +129,8 @@ it that way unless there's a strong reason.
 - **Palette:** near-black background, white text, soft blues (`#5aa3ff`, `#82c0ff`,
   `#3b6fb3`), cool grays. Don't introduce other accent hues without asking.
 - **Icons:** prefer brand SVGs from Simple Icons (CC0). Add the raw `path d="…"` data
-  to `scripts/icons.mjs` keyed by short lowercase name (`linkedin`, `github`, …) and
-  reference it from `data/profile.json` via the link's `icon` field. Use a 24×24 viewBox.
+  to `src/scripts/icons.mjs` keyed by short lowercase name (`linkedin`, `github`, …) and
+  reference it from `src/data/profile.json` via the link's `icon` field. Use a 24×24 viewBox.
 - **Links:** open in a new tab with `rel="noopener noreferrer me"`. The `me` token
   signals personal-identity ownership (IndieAuth / rel-me).
 - **HTML output:** keep it small, semantic, valid HTML5. No tracking scripts.
@@ -132,7 +142,7 @@ it that way unless there's a strong reason.
   serial/Oxford comma in or out of an existing strapline; preserve it as
   written. Use apostrophes for elided decades (`'90s`, `'00s`) - never bare
   `90s`/`00s`. The build script HTML-escapes everything, so write plain
-  characters in `data/profile.json`.
+  characters in `src/data/profile.json`.
 - **No em/en dashes, ever.** Never use em dashes (U+2014) or en dashes (U+2013)
   anywhere in this repo - use an ASCII hyphen (`-`) for asides instead. This
   rule applies to data, templates, scripts, styles, docs, generated output,
@@ -145,13 +155,13 @@ it that way unless there's a strong reason.
 ## Profile categorisation (current intent)
 
 - **Professional:** LinkedIn, GitHub.
-- **Personal** *(currently `"hidden": true` in `data/profile.json` - data kept, not rendered):*
+- **Personal** *(currently `"hidden": true` in `src/data/profile.json` - data kept, not rendered):*
   Facebook, X, Instagram (`@leewilson86`), SoundCloud, YouTube (`@leejwilson`).
 - **Music - Maldini:** band website (`maldiniband.co.uk`), Instagram (`@maldiniband`),
   YouTube (`@maldini8189`).
 
-Any section in `data/profile.json` with `"hidden": true` is skipped by
-`scripts/build.mjs` at render time. Use this to take a group of links offline
+Any section in `src/data/profile.json` with `"hidden": true` is skipped by
+`src/scripts/build.mjs` at render time. Use this to take a group of links offline
 without losing its content. Do **not** delete hidden sections.
 
 If the user adds a new account, ask which bucket it belongs in only if it isn't
@@ -177,7 +187,7 @@ The agent is expected to be competent in:
 - **Typography policing:** actively grep for em dashes (U+2014) and en dashes
   (U+2013) on every prompt and replace them with ASCII hyphens. There is no
   Make target for this - the agent is the enforcement layer.
-- **Smoke testing:** running `make check` (which includes `scripts/smoke.sh`)
+- **Smoke testing:** running `make check` (which includes `src/scripts/smoke.sh`)
   after every edit and only yielding once it passes; reading `[smoke]` output
   to diagnose regressions.
 - **Documentation hygiene:** keeping `README.md` aligned with reality on every change.
