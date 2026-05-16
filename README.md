@@ -1,10 +1,11 @@
-# leewilson.me
+# www.leewilson.me
 
 A small, static personal hub linking out to my professional, personal, and music profiles.
 
-- **Live (custom domain):** https://leewilson.me
+- **Live (custom domain):** https://www.leewilson.me
+- **Apex (redirects to www):** https://leewilson.me -> https://www.leewilson.me (301)
 - **Origin (GitHub Pages):** https://leewilson86.github.io
-- **DNS / edge:** Cloudflare → GitHub Pages, with `CNAME` set to `www.leewilson.me`.
+- **DNS / edge:** Cloudflare -> GitHub Pages, with `CNAME` set to `www.leewilson.me`.
 
 ## Stack
 
@@ -14,24 +15,34 @@ Plain, modern web: HTML5, CSS3 (custom properties, CSS grid, `dvh` units), no ru
 .
 ├── index.html                    # ← generated; committed for GitHub Pages
 ├── 404.html                      # ← generated; custom Pages error page (served on any 404)
+├── sitemap.xml                   # ← generated; advertised in robots.txt
+├── og-image.png                  # ← generated; 1200x630 social preview (rsvg-convert)
+├── robots.txt                    # crawler policy + sitemap pointer
 ├── styles.css                    # hand-written, dark theme (black / white / soft blues / grays)
 ├── CNAME                         # custom domain for GitHub Pages
 ├── _config.yml                   # Jekyll/Pages config: excludes source/tooling files from publication
+├── LICENSE.md                    # MIT
 ├── src/                          # ← all build sources live here, away from served files
 │   ├── data/
 │   │   └── profile.json          # ← edit me: name, tagline, sections, links, 404 copy
 │   ├── templates/
 │   │   ├── index.template.html   # HTML shell for the home page
-│   │   └── 404.template.html     # HTML shell for the custom 404 page
+│   │   ├── 404.template.html     # HTML shell for the custom 404 page
+│   │   └── og-image.svg          # source for og-image.png (rendered via `make og-image`)
 │   └── scripts/
-│       ├── build.mjs             # renders template + data → index.html
+│       ├── build.mjs             # renders templates + data → index.html, 404.html, sitemap.xml
 │       ├── serve.mjs             # zero-dep static server used by `make serve`
 │       ├── smoke.sh              # end-to-end smoke test (`make smoke`)
 │       └── icons.mjs             # brand SVG path data (Simple Icons, CC0)
+├── .github/
+│   └── workflows/
+│       └── ci.yml                # GitHub Actions: runs `make check` on push + PR
 ├── package.json                  # `npm run build` / `npm run serve`
 ├── Makefile                      # convenience automation (build, serve, check, release…)
 ├── Dockerfile                    # pinned Node 24 LTS Alpine image
 ├── .dockerignore                 # files excluded from the Docker build context
+├── .editorconfig                 # cross-IDE indentation / EOL / charset rules
+├── .gitattributes                # text/binary handling, LF normalisation, linguist hints
 ├── .nvmrc                        # Node version pin for host devs (`24`)
 ├── .gitignore                    # OS / IDE (JetBrains, VS Code) / build noise
 ├── AGENTS.md                     # contract for AI agents working in this repo
@@ -39,9 +50,11 @@ Plain, modern web: HTML5, CSS3 (custom properties, CSS grid, `dvh` units), no ru
 ```
 
 The repo root holds only files that GitHub Pages serves directly
-(`index.html`, `404.html`, `styles.css`, `CNAME`), the Jekyll exclusion
-config (`_config.yml`), and conventional top-level project files.
-Everything under `src/` is build-time source.
+(`index.html`, `404.html`, `sitemap.xml`, `og-image.png`, `robots.txt`,
+`styles.css`, `CNAME`), the Jekyll exclusion config (`_config.yml`), and
+conventional top-level project files (`LICENSE.md`, `Makefile`, `Dockerfile`,
+`README.md`, `AGENTS.md`, `package.json`, dotfiles). Everything under
+`src/` is build-time source.
 
 ## Develop
 
@@ -105,9 +118,11 @@ inside the pinned container. Run `make` to see the full list:
 | `make validate-html` | Quick structural sanity-check of `index.html` |
 | `make smoke` | Boot the server in Docker, fetch `/` and `/styles.css`, assert HTTP 200 and key content |
 | `make check` | All of the above validation checks |
+| `make linkcheck` | Verify every outbound link in `index.html` returns 2xx/3xx (needs network; not in `make check`) |
+| `make og-image` | Re-render `og-image.png` from `src/templates/og-image.svg` via Alpine + rsvg-convert |
 | `make clean` | Remove generated artefacts |
 | `make doctor` | Print host + container tool versions |
-| `make release` | `check`, build, and commit a regenerated `index.html` |
+| `make release` | `check`, build, and commit a regenerated `index.html` (opt-in; only on explicit request) |
 
 Override defaults inline, e.g. `make serve PORT=9000`, `make preview OPEN=xdg-open`,
 or `make build NODE_IMAGE=node:24-alpine@sha256:<digest>`.
@@ -138,7 +153,27 @@ a group of links offline without losing them.
 
 ## Hosting
 
-GitHub Pages serves the repo root as a static site. Cloudflare proxies `leewilson.me` → `leewilson86.github.io`. The `CNAME` file pins the custom domain on the GitHub Pages side.
+GitHub Pages serves the repo root as a static site. Cloudflare proxies the
+domain in front of GitHub Pages. The `CNAME` file pins the custom host to
+`www.leewilson.me` on the GitHub Pages side.
+
+### Canonical host and apex redirect
+
+The forced default host is **`www.leewilson.me`**. The apex
+(`leewilson.me`) should 301-redirect to it. There are two supported ways
+to wire that up:
+
+1. **At Cloudflare (recommended when proxied through Cloudflare):** add a
+   *Bulk Redirect* or *Redirect Rule* matching `leewilson.me/*` ->
+   `https://www.leewilson.me/$1` with status `301`.
+2. **At GitHub Pages directly:** point the apex `leewilson.me` `A`
+   records at GitHub Pages' four IPs (185.199.108.153 / .109.153 /
+   .110.153 / .111.153). With those in place, GitHub Pages itself will
+   issue a 301 from the apex to the `CNAME` host.
+
+Either approach works; pick whichever fits your Cloudflare setup. The
+repo itself only needs `CNAME` (already set) and the canonical URLs
+emitted by the build to use `https://www.leewilson.me/` (they do).
 
 ### Custom 404 page
 
@@ -156,7 +191,7 @@ GitHub Pages does not support custom error pages for other status codes
 ### Keeping source files off the public site
 
 GitHub Pages runs Jekyll over the repository by default. Without configuration,
-every file at the repo root would be reachable at `https://leewilson.me/<path>`
+every file at the repo root would be reachable at `https://www.leewilson.me/<path>`
 (for example `/package.json` or `/Makefile`). The `_config.yml` at the repo
 root tells Jekyll to drop the build sources and tooling files from the
 published site:
@@ -171,13 +206,32 @@ exclude:
   - src/
 ```
 
-Dotfiles (`.gitignore`, `.dockerignore`, `.nvmrc`, `.idea/` etc.) are excluded
-by Jekyll's own defaults and do not need an entry. Only `index.html`,
-`styles.css`, and `CNAME` (consumed by Pages itself) are published.
+Dotfiles (`.gitignore`, `.dockerignore`, `.editorconfig`, `.gitattributes`,
+`.nvmrc`, `.idea/`, `.github/` etc.) are excluded by Jekyll's own defaults
+and do not need an entry. Publicly reachable URLs at `www.leewilson.me` are
+limited to: `/`, `/404.html`, `/styles.css`, `/robots.txt`, `/sitemap.xml`,
+`/og-image.png`. `CNAME` is consumed by Pages itself.
 
 When adding a new top-level file that is **not** meant to be served publicly,
 add it to `_config.yml`'s `exclude:` list - or, better, put it under `src/`,
 which is already excluded as a directory.
+
+## Discoverability
+
+- **JSON-LD `Person` schema** is rendered into `index.html` from `profile.json`
+  so search engines and identity-graph consumers can resolve the page to a
+  single entity (name, tagline, image, `sameAs` profile links).
+- **`og-image.png`** (1200×630) and `twitter:card = summary_large_image`
+  make link previews on Slack / LinkedIn / iMessage / X look correct. The
+  PNG is generated from `src/templates/og-image.svg` via `make og-image`.
+- **`robots.txt`** + **`sitemap.xml`** advertise the canonical URL.
+
+## Continuous integration
+
+`.github/workflows/ci.yml` runs the full `make check` pipeline (Docker
+build + JSON/HTML validation + drift check + smoke test) on every push and
+pull request to `master`. Actions are pinned by commit SHA per the
+security note in `AGENTS.md`.
 
 ## License
 

@@ -1,31 +1,41 @@
-# GitHub Pages / Jekyll configuration for leewilson.me
+# GitHub Pages / Jekyll configuration for www.leewilson.me
 #
 # This site is a hand-built static page; we are NOT using Jekyll as a
 # templating engine. The only reason this file exists is to tell Jekyll
 # (which GitHub Pages runs by default) to NOT publish the build sources
 # and tooling files alongside the served site.
 #
-# Without this, files like https://leewilson.me/package.json or
+# Without this, files like https://www.leewilson.me/package.json or
 # /Makefile or /src/scripts/build.mjs would be reachable. With the
 # `exclude:` list below, GitHub Pages drops them from the published
 # `_site/` and returns 404 for those URLs.
 #
-# What is actually served at leewilson.me:
+# Canonical host: www.leewilson.me (set in CNAME). Visits to the apex
+# leewilson.me are expected to 301-redirect to the www host at the edge
+# (Cloudflare Bulk Redirect / Page Rule, or GitHub Pages' own apex
+# redirect when the apex A records point to Pages).
+#
+# What is actually served at www.leewilson.me:
 #   /              -> index.html
 #   /styles.css    -> styles.css
+#   /404.html      -> served as the body of any not-found URL
+#   /sitemap.xml   -> generated single-URL sitemap
+#   /robots.txt    -> crawler policy + sitemap pointer
+#   /og-image.png  -> social preview image
 #   (CNAME is consumed by Pages itself for the custom domain.)
 #
 # Jekyll's built-in defaults already exclude dotfiles (e.g. .gitignore,
-# .dockerignore, .nvmrc, .idea/), node_modules/, vendor/ and Gemfiles,
-# so they do not need to appear here.
+# .dockerignore, .editorconfig, .gitattributes, .nvmrc, .idea/, .github/),
+# node_modules/, vendor/ and Gemfiles, so they do not need to appear here.
 #
 # If you add a new top-level file that is NOT meant to be served at
-# leewilson.me, add it to this list (or, preferably, put it under src/
+# www.leewilson.me, add it to this list (or, preferably, put it under src/
 # so it is excluded by the directory rule below).
 
 exclude:
   - AGENTS.md
   - README.md
+  - LICENSE.md
   - Dockerfile
   - Makefile
   - package.json

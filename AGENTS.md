@@ -5,30 +5,37 @@ Operating contract for AI coding agents (e.g. GitHub Copilot) working in this re
 ## What this repo is
 
 A **static** personal landing page for Lee Wilson, deployed via **GitHub Pages** at
-`leewilson86.github.io` and served publicly at `https://leewilson.me` via Cloudflare.
-The `CNAME` file pins the custom domain.
+`leewilson86.github.io` and served publicly at `https://www.leewilson.me`
+via Cloudflare. The `CNAME` file pins the custom host to `www.leewilson.me`;
+the apex `leewilson.me` is expected to 301-redirect to it (configured at
+the Cloudflare edge or by pointing apex `A` records at GitHub Pages' IPs).
 
 The site is rendered at build time from a small data file so the most common change
 (adding / editing a link) is a one-file edit followed by a rebuild.
 
 ## Source of truth
 
-| Concern | File |
-|---|---|
-| Page content (name, tagline, sections, links, handles, footer, 404 copy) | `src/data/profile.json` |
-| HTML shell + meta tags (home) | `src/templates/index.template.html` |
-| HTML shell for the custom 404 page | `src/templates/404.template.html` |
-| Brand icon SVG paths (24×24 viewBox) | `src/scripts/icons.mjs` |
-| Visual design | `styles.css` |
-| Build orchestration | `src/scripts/build.mjs` |
-| Local static server | `src/scripts/serve.mjs` (zero-dep, Node built-ins) |
+| Concern | File                                                                    |
+|---|-------------------------------------------------------------------------|
+| Page content (name, tagline, sections, links, handles, footer, 404 copy) | `src/data/profile.json`                                                 |
+| HTML shell + meta tags (home) | `src/templates/index.template.html`                                     |
+| HTML shell for the custom 404 page | `src/templates/404.template.html`                                       |
+| OpenGraph / Twitter card image source | `src/templates/og-image.svg` (rendered to `og-image.png`)               |
+| Brand icon SVG paths (24×24 viewBox) | `src/scripts/icons.mjs`                                                 |
+| Visual design | `styles.css`                                                            |
+| Build orchestration | `src/scripts/build.mjs`                                                 |
+| Local static server | `src/scripts/serve.mjs` (zero-dep, Node built-ins)                      |
 | Automated smoke test | `src/scripts/smoke.sh` (boots server in Docker, asserts HTTP + content) |
-| Generated outputs (committed, served by Pages) | `index.html`, `404.html` |
-| Custom domain | `CNAME` |
-| GitHub Pages / Jekyll config (exclusions) | `_config.yml` |
-| Task automation | `Makefile` |
-| Pinned dev/build runtime | `Dockerfile` (`node:24-alpine`), `.dockerignore` |
-| Node version pin (host fallback) | `.nvmrc`, `engines` in `package.json` |
+| Generated outputs (committed, served by Pages) | `index.html`, `404.html`, `sitemap.xml`, `og-image.png`                 |
+| Static crawler policy | `robots.txt`                                                            |
+| Custom domain | `CNAME`                                                                 |
+| GitHub Pages / Jekyll config (exclusions) | `_config.yml`                                                           |
+| License | `LICENSE.md` (MIT)                                                      |
+| Cross-IDE / git hygiene | `.editorconfig`, `.gitattributes`                                       |
+| Task automation | `Makefile`                                                              |
+| Pinned dev/build runtime | `Dockerfile` (`node:24-alpine`), `.dockerignore`                        |
+| Node version pin (host fallback) | `.nvmrc`, `engines` in `package.json`                                   |
+| Continuous integration | `.github/workflows/ci.yml` (SHA-pinned actions, runs `make check`)      |
 
 ### Layout convention
 
@@ -42,13 +49,16 @@ conventionally requires it to be at the root).
 
 GitHub Pages runs Jekyll over the repo by default. Anything at the root
 that is not listed in `_config.yml`'s `exclude:` block will be reachable
-at `https://leewilson.me/<path>`. **When adding a new top-level file
+at `https://www.leewilson.me/<path>`. **When adding a new top-level file
 that is not meant to be served publicly, add it to the `exclude:` list
 in `_config.yml`** (or, preferably, place it under `src/`, which is
 already excluded as a directory). Dotfiles are excluded by Jekyll's
 defaults and do not need an entry.
 
-**Never hand-edit `index.html` or `404.html`.** They are generated. Edit the inputs, then run `make build` (or `npm run build`).
+**Never hand-edit the generated artefacts** (`index.html`, `404.html`,
+`sitemap.xml`, `og-image.png`). Edit the inputs (data, templates, icons,
+styles, `og-image.svg`) and run `make build` (or `make og-image` for the
+PNG). The drift check (`make verify`) will catch out-of-date outputs.
 
 ## Build / run
 
@@ -220,6 +230,22 @@ The agent is expected to be competent in:
   `docker run` with host-mounted volumes and matching UID/GID; understanding
   image tags vs digest pinning, port publishing, and shell interactivity flags
   (`-it`, `--rm`).
+- **GitHub Actions / CI hygiene:** authoring minimal workflows that exercise
+  the same `make check` pipeline used locally; pinning third-party actions
+  to full commit SHAs (with a trailing `# vX.Y.Z` comment) rather than
+  mutable tags; using least-privilege `permissions:` blocks and
+  `concurrency:` cancel-in-progress.
+- **SEO / discoverability primitives:** writing minimal `robots.txt` and
+  `sitemap.xml`, hand-authoring JSON-LD `schema.org/Person` blocks driven
+  from the existing data file, producing 1200×630 OpenGraph images via a
+  reproducible toolchain (e.g. Alpine + `rsvg-convert` in a one-off
+  container) so the PNG is regenerated deterministically from an SVG
+  source, and wiring `twitter:card = summary_large_image` correctly.
+- **Web security defence-in-depth on a static site:** scoping a strict CSP
+  (`default-src 'none'` plus the minimum allowances the page actually uses)
+  to a `<meta http-equiv>` element; `referrer`, `X-Content-Type-Options`
+  meta tags; knowing that the strongest headers (HSTS, frame-ancestors,
+  full CSP) need to be set at the Cloudflare edge, not in the markup.
 
 If a future task requires a skill not in this list (e.g. introducing a JS framework,
 adding a blog, generating RSS), add it here as part of the same change.
