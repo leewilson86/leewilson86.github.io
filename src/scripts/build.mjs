@@ -12,6 +12,10 @@ import { icons } from './icons.mjs';
 const here = dirname(fileURLToPath(import.meta.url));
 const srcDir = join(here, '..');
 const root = join(srcDir, '..');
+// Canonical site URL. Single source of truth for the host - injected into
+// templates as {{SITE_URL}} so og:url, canonical, etc. all stay in sync.
+// Trailing slash is significant (used as a base in templates).
+const SITE_URL = 'https://leewilson.me/';
 
 const escapeHtml = (s) =>
   String(s).replace(/[&<>"']/g, (c) => ({
@@ -55,6 +59,7 @@ const build = async () => {
   const nfTmpl    = await readFile(join(srcDir, 'templates/404.template.html'), 'utf8');
 
   const indexHtml = indexTmpl
+    .replaceAll('{{SITE_URL}}', SITE_URL)
     .replaceAll('{{NAME}}', escapeHtml(data.name))
     .replaceAll('{{TAGLINE}}', escapeHtml(data.tagline))
     .replaceAll('{{INTRO}}', escapeHtml(data.intro))
