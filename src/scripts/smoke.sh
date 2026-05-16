@@ -75,6 +75,12 @@ assert_missing 'id="personal"'
 # --- styles.css ------------------------------------------------------------
 assert_url "/styles.css" 1000
 
+# --- robots.txt + sitemap.xml ---------------------------------------------
+assert_url "/robots.txt" 30
+assert_contains "Sitemap: https://leewilson.me/sitemap.xml"
+assert_url "/sitemap.xml" 100
+assert_contains "<loc>https://leewilson.me/</loc>"
+
 # --- 404 path --------------------------------------------------------------
 # Should serve the custom 404.html with status 404 (matches GitHub Pages).
 code=$(curl -s -o "$TMP_BODY" -w '%{http_code}' "http://127.0.0.1:${SMOKE_PORT}/does-not-exist")

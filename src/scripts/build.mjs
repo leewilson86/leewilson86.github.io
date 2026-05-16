@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Static site builder for leewilson.me
-// Reads src/data/profile.json + src/templates/index.template.html and writes index.html.
+// Reads src/data/profile.json + src/templates/*.template.html and writes
+// index.html, 404.html, and sitemap.xml at the repo root.
 // Run: `npm run build`
 
 import { readFile, writeFile } from 'node:fs/promises';
@@ -53,6 +54,18 @@ const renderSection = (section) => `
       </ul>
     </section>`;
 
+// Minimal sitemap.xml (single URL). No <lastmod> on purpose to keep the
+// build deterministic - drift check otherwise rewrites the file every run.
+const renderSitemap = () => `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>${SITE_URL}</loc>
+    <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>
+`;
+
 const build = async () => {
   const data = JSON.parse(await readFile(join(srcDir, 'data/profile.json'), 'utf8'));
   const indexTmpl = await readFile(join(srcDir, 'templates/index.template.html'), 'utf8');
@@ -75,13 +88,17 @@ const build = async () => {
     .replaceAll('{{NF_MESSAGE}}', escapeHtml(nf.message || "That URL doesn't lead anywhere on this site."))
     .replaceAll('{{NF_CTA}}',     escapeHtml(nf.cta     || 'Back to the homepage'));
 
-  await writeFile(join(root, 'index.html'), indexHtml, 'utf8');
-  await writeFile(join(root, '404.html'),   nfHtml,    'utf8');
+  const sitemap = renderSitemap();
+
+  await writeFile(join(root, 'index.html'),  indexHtml, 'utf8');
+  await writeFile(join(root, '404.html'),    nfHtml,    'utf8');
+  await writeFile(join(root, 'sitemap.xml'), sitemap,   'utf8');
 
   const visible = data.sections.filter((s) => !s.hidden);
   const hidden  = data.sections.length - visible.length;
   console.log(`[build] wrote index.html (${visible.length} sections${hidden ? `, ${hidden} hidden` : ''}, ${visible.reduce((n, s) => n + s.links.length, 0)} links)`);
-  console.log(`[build] wrote 404.html  (custom GitHub Pages error page)`);
+  console.log(`[build] wrote 404.html    (custom GitHub Pages error page)`);
+  console.log(`[build] wrote sitemap.xml (${SITE_URL})`);
 };
 
 build().catch((err) => {

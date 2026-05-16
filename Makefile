@@ -20,7 +20,9 @@ OPEN           ?= open
 
 OUTPUT         := index.html
 OUTPUT_404     := 404.html
-OUTPUTS        := $(OUTPUT) $(OUTPUT_404)
+OUTPUT_SITEMAP := sitemap.xml
+HTML_OUTPUTS   := $(OUTPUT) $(OUTPUT_404)
+OUTPUTS        := $(HTML_OUTPUTS) $(OUTPUT_SITEMAP)
 SRC_DIR        := src
 TEMPLATE       := $(SRC_DIR)/templates/index.template.html
 TEMPLATE_404   := $(SRC_DIR)/templates/404.template.html
@@ -65,7 +67,7 @@ help: ## Show this help
 ##@ Build
 
 .PHONY: build
-build: $(OUTPUTS) ## Render index.html + 404.html from data + templates (inside Docker)
+build: $(OUTPUTS) ## Render index.html + 404.html + sitemap.xml from data + templates (inside Docker)
 
 $(OUTPUTS): $(SOURCES)
 	@$(DOCKER_RUN) node $(BUILD_SCRIPT)
@@ -136,7 +138,7 @@ validate-json: ## Validate src/data/profile.json is well-formed JSON
 
 .PHONY: validate-html
 validate-html: build ## Quick sanity-check that generated HTML files look well-formed
-	@for f in $(OUTPUTS); do \
+	@for f in $(HTML_OUTPUTS); do \
 		$(DOCKER_RUN) node -e "const h=require('fs').readFileSync('$$f','utf8'); \
 			if(!/^<!doctype html>/i.test(h)) { console.error('x missing doctype in $$f'); process.exit(1); } \
 			const opens=(h.match(/<section/g)||[]).length, closes=(h.match(/<\/section>/g)||[]).length; \
