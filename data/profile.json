@@ -1,0 +1,48 @@
+{
+  "name": "Lee Wilson",
+  "tagline": "Technologist. Musician. Curious human.",
+  "intro": "I build software and infrastructure, play in a band, and stay curious - here's where to find me online.",
+  "footer": "© Lee Wilson · leewilson.me",
+  "sections": [
+    {
+      "id": "professional",
+      "title": "Professional",
+      "description": "Where I work, build and ship.",
+      "links": [
+        { "label": "LinkedIn",  "url": "https://www.linkedin.com/in/leewilson86/", "icon": "linkedin", "handle": "in/leewilson86" },
+        { "label": "GitHub",    "url": "https://github.com/leewilson86",            "icon": "github",   "handle": "@leewilson86" }
+      ]
+    },
+    {
+      "id": "personal",
+      "title": "Personal",
+      "description": "Where I post, share, and switch off.",
+      "hidden": true,
+      "links": [
+        { "label": "Facebook",   "url": "https://www.facebook.com/leewilson86",  "icon": "facebook",   "handle": "/leewilson86" },
+        { "label": "X",          "url": "https://x.com/leewilson86",             "icon": "x",          "handle": "@leewilson86" },
+        { "label": "Instagram",  "url": "https://www.instagram.com/leewilson86", "icon": "instagram",  "handle": "@leewilson86" },
+        { "label": "SoundCloud", "url": "https://soundcloud.com/leewilson",      "icon": "soundcloud", "handle": "/leewilson" },
+        { "label": "YouTube",    "url": "https://www.youtube.com/@leejwilson",   "icon": "youtube",    "handle": "@leejwilson" }
+      ]
+    },
+    {
+      "id": "music",
+      "title": "Music - Maldini",
+      "description": "Where we plug in and play the classics - '90s, '00s, and a few hidden gems.",
+      "links": [
+        { "label": "Website",   "url": "http://maldiniband.co.uk/",                "icon": "globe",     "handle": "maldiniband.co.uk" },
+        { "label": "Instagram", "url": "https://www.instagram.com/maldiniband/",   "icon": "instagram", "handle": "@maldiniband" },
+        { "label": "YouTube",   "url": "https://www.youtube.com/@maldini8189",     "icon": "youtube",   "handle": "@maldini8189" }
+      ]
+    }
+  ]
+}
+
+
+
+
+
+
+
+

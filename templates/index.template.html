@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="theme-color" content="#0a0d12" />
+  <title>{{NAME}} - {{TAGLINE}}</title>
+  <meta name="description" content="{{INTRO}}" />
+
+  <!-- Open Graph / social previews -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="{{NAME}}" />
+  <meta property="og:description" content="{{TAGLINE}}" />
+  <meta property="og:url" content="https://leewilson.me/" />
+  <meta name="twitter:card" content="summary" />
+
+  <link rel="canonical" href="https://leewilson.me/" />
+  <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230a0d12'/><text x='50%25' y='55%25' font-family='ui-sans-serif,system-ui' font-size='16' font-weight='700' fill='%23e6f0ff' text-anchor='middle' dominant-baseline='middle'>LW</text></svg>" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <div class="bg" aria-hidden="true">
+    <div class="grid"></div>
+    <div class="glow glow-a"></div>
+    <div class="glow glow-b"></div>
+  </div>
+
+  <main id="main" class="shell">
+    <header class="hero">
+      <h1>{{NAME}}</h1>
+      <p class="tagline">{{TAGLINE}}</p>
+      <p class="intro">{{INTRO}}</p>
+    </header>
+
+    {{SECTIONS}}
+
+    <footer class="foot">
+      <p>{{FOOTER}}</p>
+    </footer>
+  </main>
+</body>
+</html>
+
+
