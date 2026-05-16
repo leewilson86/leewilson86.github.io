@@ -1,0 +1,29 @@
+# Default: auto-detect text vs binary, but force LF line endings in the
+# repository for text files so a Windows clone does not produce CRLF diffs.
+* text=auto eol=lf
+
+# Generated outputs are still text; keep diff-friendly.
+index.html      text eol=lf
+404.html        text eol=lf
+sitemap.xml     text eol=lf
+
+# Binary assets - never line-end-normalised or diff'd as text.
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.webp  binary
+*.ico   binary
+*.woff  binary
+*.woff2 binary
+
+# SVG is technically XML/text. Treating it as text preserves readable diffs
+# (we hand-author the brand-icon paths and the OG image), but force LF.
+*.svg   text eol=lf
+
+# Mark generated files so GitHub collapses them in PR diffs.
+index.html      linguist-generated=true
+404.html        linguist-generated=true
+sitemap.xml     linguist-generated=true
+og-image.png    linguist-generated=true
+
