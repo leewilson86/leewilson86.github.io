@@ -1,0 +1,58 @@
+# Continuous integration for leewilson.me
+#
+# Runs the same `make check` pipeline used locally (build inside the pinned
+# node:24-alpine container, JSON / HTML validation, drift check, end-to-end
+# smoke test) on every push and pull request that touches the build inputs.
+#
+# Actions are pinned by commit SHA (with the human-readable tag as a
+# trailing comment) per the security advice in AGENTS.md. To upgrade an
+# action, look up the new SHA with:
+#   gh api repos/<owner>/<repo>/git/ref/tags/<tag> --jq .object.sha
+# then update both the SHA and the trailing version comment in lockstep.
+
+name: ci
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch: {}
+
+# Cancel an in-flight run for the same ref when a newer commit arrives.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# Least-privilege token: read-only for code, no write scopes.
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: make check
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Show host versions
+        run: |
+          set -eux
+          docker --version
+          make --version | head -n1
+          uname -a
+
+      - name: Pull pinned Node image
+        run: make pull
+
+      - name: Run full check pipeline (build + validate + drift + smoke)
+        run: make check
+
+      - name: Show generated artefact sizes
+        if: always()
+        run: |
+          ls -lh index.html 404.html sitemap.xml og-image.png robots.txt || true
+
