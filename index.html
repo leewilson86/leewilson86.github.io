@@ -5,6 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="color-scheme" content="dark" />
   <meta name="theme-color" content="#0a0d12" />
+
+  <!-- Security: defence-in-depth via meta. Real HTTP headers are set at
+       the Cloudflare edge; these provide a safety net for any path that
+       bypasses the edge (e.g. preview environments). -->
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; img-src 'self' data:; style-src 'self'; font-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'" />
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
   <title>Lee Wilson - Technologist. Musician. Curious human.</title>
   <meta name="description" content="I build software and infrastructure, play in a band, and stay curious - here&#39;s where to find me online." />
 
@@ -28,6 +36,7 @@
   <link rel="canonical" href="https://leewilson.me/" />
   <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230a0d12'/><text x='50%25' y='55%25' font-family='ui-sans-serif,system-ui' font-size='16' font-weight='700' fill='%23e6f0ff' text-anchor='middle' dominant-baseline='middle'>LW</text></svg>" />
   <link rel="stylesheet" href="/styles.css" />
+  <meta name="generator" content="leewilson.me static build" />
 
   <script type="application/ld+json">
 {
