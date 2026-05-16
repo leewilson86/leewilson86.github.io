@@ -115,7 +115,12 @@ it that way unless there's a strong reason.
    Do not yield control back to the user until `make check` passes.
 5. Before yielding, grep once more for em/en dashes in any files touched (and
    in any new content authored) and remove any that slipped in.
-6. Commit the regenerated `index.html` alongside the input change.
+6. **Do not run `git commit` or `git push` automatically.** Leave the working
+   tree dirty (regenerated `index.html` / `404.html` alongside the input
+   change) for the user to review and commit themselves. Only commit when the
+   user explicitly asks for it ("commit", "release", "make release", etc.).
+   `make release` is opt-in for this reason and must never be invoked
+   without an explicit instruction.
 7. Update `README.md` so it accurately describes the current state of the repo.
 8. Update `AGENTS.md` if (and only if) the agent contract itself has changed -
    new skills, new conventions, new files agents need to know about, new
@@ -123,7 +128,8 @@ it that way unless there's a strong reason.
 
 > The user has explicitly asked that `README.md` is reviewed/updated on **every** prompt,
 > that `AGENTS.md` is updated whenever the agent's skills or this contract change,
-> and that `make check` (which includes the automated smoke test) is run after every edit.
+> that `make check` (which includes the automated smoke test) is run after every edit,
+> and that the agent **never commits to git without an explicit instruction**.
 
 ## Conventions
 
