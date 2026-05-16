@@ -84,6 +84,12 @@ assert_contains "Sitemap: https://leewilson.me/sitemap.xml"
 assert_url "/sitemap.xml" 100
 assert_contains "<loc>https://leewilson.me/</loc>"
 
+# --- og-image.png ----------------------------------------------------------
+# Sharing previews depend on this 1200x630 PNG existing at /og-image.png.
+code=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:${SMOKE_PORT}/og-image.png")
+[ "$code" = "200" ] || fail "GET /og-image.png -> HTTP ${code} (expected 200)"
+log "OK  GET /og-image.png -> HTTP 200"
+
 # --- 404 path --------------------------------------------------------------
 # Should serve the custom 404.html with status 404 (matches GitHub Pages).
 code=$(curl -s -o "$TMP_BODY" -w '%{http_code}' "http://127.0.0.1:${SMOKE_PORT}/does-not-exist")

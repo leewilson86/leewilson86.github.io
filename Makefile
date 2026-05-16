@@ -26,6 +26,8 @@ OUTPUTS        := $(HTML_OUTPUTS) $(OUTPUT_SITEMAP)
 SRC_DIR        := src
 TEMPLATE       := $(SRC_DIR)/templates/index.template.html
 TEMPLATE_404   := $(SRC_DIR)/templates/404.template.html
+OG_SVG         := $(SRC_DIR)/templates/og-image.svg
+OG_PNG         := og-image.png
 DATA           := $(SRC_DIR)/data/profile.json
 ICONS          := $(SRC_DIR)/scripts/icons.mjs
 BUILD_SCRIPT   := $(SRC_DIR)/scripts/build.mjs
@@ -152,6 +154,19 @@ smoke: build ## End-to-end smoke test (boots the server in Docker and curls it)
 
 .PHONY: check
 check: validate-json validate-html verify smoke ## Run all checks (JSON, HTML, drift, smoke)
+
+##@ Assets
+
+.PHONY: og-image
+og-image: $(OG_PNG) ## Re-render $(OG_PNG) from $(OG_SVG) via one-off Alpine + rsvg-convert
+
+$(OG_PNG): $(OG_SVG)
+	@echo "[og-image] rendering $(OG_SVG) -> $(OG_PNG) (1200x630)"
+	@$(DOCKER) run --rm -v "$(CURDIR)":/work -w /work alpine:3.20 sh -c \
+		"apk add --no-cache rsvg-convert >/dev/null && \
+		 rsvg-convert -w 1200 -h 630 -o $(OG_PNG) $(OG_SVG) && \
+		 chown $$$$(id -u):$$$$(id -g) $(OG_PNG)"
+	@ls -lh $(OG_PNG) | awk '{ print "[og-image] wrote " $$NF " (" $$5 ")" }'
 
 ##@ Housekeeping
 
