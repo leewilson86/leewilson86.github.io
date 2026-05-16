@@ -54,6 +54,28 @@ const renderSection = (section) => `
       </ul>
     </section>`;
 
+// JSON-LD Person schema. Visible only to crawlers; gives Google / Bing /
+// LinkedIn a clean identity graph for the page.
+const renderJsonLd = (data) => {
+  const sameAs = data.sections
+    .filter((s) => !s.hidden)
+    .flatMap((s) => s.links.map((l) => l.url))
+    // Drop the band site - it represents the band, not Lee personally.
+    .filter((u) => !/maldiniband\.co\.uk/i.test(u));
+  const person = {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: data.name,
+    url: SITE_URL,
+    description: data.tagline,
+    image: `${SITE_URL}og-image.png`,
+    sameAs,
+  };
+  // Pretty-print for readable diffs; escape </ to keep the script tag safe.
+  const json = JSON.stringify(person, null, 2).replace(/</g, '\\u003c');
+  return `<script type="application/ld+json">\n${json}\n  </script>`;
+};
+
 // Minimal sitemap.xml (single URL). No <lastmod> on purpose to keep the
 // build deterministic - drift check otherwise rewrites the file every run.
 const renderSitemap = () => `<?xml version="1.0" encoding="UTF-8"?>
@@ -77,7 +99,8 @@ const build = async () => {
     .replaceAll('{{TAGLINE}}', escapeHtml(data.tagline))
     .replaceAll('{{INTRO}}', escapeHtml(data.intro))
     .replaceAll('{{FOOTER}}', escapeHtml(data.footer))
-    .replace('{{SECTIONS}}', data.sections.filter((s) => !s.hidden).map(renderSection).join('\n'));
+    .replace('{{SECTIONS}}', data.sections.filter((s) => !s.hidden).map(renderSection).join('\n'))
+    .replace('{{JSON_LD}}', renderJsonLd(data));
 
   const nf = data.notFound || {};
   const nfHtml = nfTmpl
@@ -96,7 +119,8 @@ const build = async () => {
 
   const visible = data.sections.filter((s) => !s.hidden);
   const hidden  = data.sections.length - visible.length;
-  console.log(`[build] wrote index.html (${visible.length} sections${hidden ? `, ${hidden} hidden` : ''}, ${visible.reduce((n, s) => n + s.links.length, 0)} links)`);
+  const sameAsCount = (renderJsonLd(data).match(/^\s*"https:/gm) || []).length;
+  console.log(`[build] wrote index.html  (${visible.length} sections${hidden ? `, ${hidden} hidden` : ''}, ${visible.reduce((n, s) => n + s.links.length, 0)} links, JSON-LD with ${sameAsCount} sameAs URLs)`);
   console.log(`[build] wrote 404.html    (custom GitHub Pages error page)`);
   console.log(`[build] wrote sitemap.xml (${SITE_URL})`);
 };

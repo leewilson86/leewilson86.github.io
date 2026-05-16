@@ -71,6 +71,9 @@ assert_contains "leewilson86"
 assert_contains "maldini"
 # Personal section is currently hidden in data/profile.json; assert it stays out.
 assert_missing 'id="personal"'
+# JSON-LD Person schema must be present and well-formed.
+assert_contains '"@type": "Person"'
+assert_contains '"sameAs"'
 
 # --- styles.css ------------------------------------------------------------
 assert_url "/styles.css" 1000
